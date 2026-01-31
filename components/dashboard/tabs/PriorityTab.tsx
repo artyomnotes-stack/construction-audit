@@ -1,0 +1,111 @@
+
+import React from 'react';
+import MarkdownRenderer from '../../common/MarkdownRenderer';
+import { PriorityTask, Template } from '../../../types';
+import TemplateSelector from '../../common/TemplateSelector';
+
+interface PriorityTabProps {
+    priorityTasks: PriorityTask[];
+    updatePriorityTask: (id: string, updates: Partial<PriorityTask>) => void;
+    priorityQuestion: string;
+    setPriorityQuestion: (q: string) => void;
+    handlePrioritySubmit: () => void;
+    loading: boolean;
+    progress: number;
+    timeLeft: number;
+    priorityResult: string | null;
+    AccuracyHint: React.FC;
+    templates: Template[];
+    handleDownloadAudio: () => void;
+    audioLoading: boolean;
+}
+
+const PriorityTab: React.FC<PriorityTabProps> = ({
+    priorityTasks,
+    updatePriorityTask,
+    priorityQuestion,
+    setPriorityQuestion,
+    handlePrioritySubmit,
+    loading,
+    progress,
+    timeLeft,
+    priorityResult,
+    AccuracyHint,
+    templates,
+    handleDownloadAudio,
+    audioLoading
+}) => {
+    return (
+        <div className="space-y-6">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div className="mb-6 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
+                    <h2 className="text-lg font-bold text-slate-800 armenian-text mb-2">3. Մասնագիտացված Խնդիրների Որոնում</h2>
+                    <p className="text-sm text-slate-600 armenian-text mb-4">Օգտագործեք այս գործիքը՝ նախագծի ամենահիմնական ռիսկերը և խնդիրները արագ գտնելու համար: Ընտրեք ստուգման ոլորտները, նշեք, թե քանի հիմնական խնդիր պետք է փնտրի AI-ն յուրաքանչյուրում, և ստացեք խնդիրների և դրանց լուծումների կառուցվածքային ցանկ:</p>
+                </div>
+
+                <div className="mb-6">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase armenian-text block mb-1">Կենտրոնացնող Հարց (Ըստ ցանկության)</label>
+                    <p className="text-[10px] text-slate-400 armenian-text mb-2">Օրինակ՝ "Գտիր բոլոր խնդիրները, որոնք կապված են սահմանափակ հնարավորություններով անձանց մատչելիության հետ":</p>
+                    <textarea
+                        value={priorityQuestion}
+                        onChange={e => setPriorityQuestion(e.target.value)}
+                        className="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 outline-none focus:bg-white focus:border-orange-500 transition-all resize-none h-24"
+                        placeholder="Օրինակ՝ Գտիր բոլոր խնդիրները, որոնք կապված են սահմանափակ հնարավորություններով անձանց մատչելիության հետ..."
+                    />
+                    <TemplateSelector templates={templates} onSelect={setPriorityQuestion} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {priorityTasks.map(task => (
+                        <div key={task.id} className={`p-4 rounded-xl border transition-all ${task.enabled ? 'bg-indigo-50 border-indigo-200 shadow-sm' : 'bg-white border-slate-200 opacity-70'}`}>
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <input type="checkbox" checked={task.enabled} onChange={e => updatePriorityTask(task.id, { enabled: e.target.checked })} className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                                    <span className={`text-xs font-bold armenian-text ${task.enabled ? 'text-indigo-900' : 'text-slate-600'}`}>{task.label}</span>
+                                </div>
+                                {task.enabled && (
+                                    <div className="flex items-center gap-2 bg-white px-2 py-1 rounded-lg border border-indigo-100">
+                                        <button onClick={() => updatePriorityTask(task.id, { count: Math.max(1, task.count - 1) })} className="text-indigo-400 hover:text-indigo-600 font-bold">-</button>
+                                        <span className="text-xs font-bold text-indigo-800 w-4 text-center">{task.count}</span>
+                                        <button onClick={() => updatePriorityTask(task.id, { count: Math.min(10, task.count + 1) })} className="text-indigo-400 hover:text-indigo-600 font-bold">+</button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <button onClick={handlePrioritySubmit} disabled={loading} className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold armenian-text shadow-lg shadow-orange-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                    {loading ? (
+                        <>
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span>Որոնվում են Խնդիրներ ({progress}%)...</span>
+                        </>
+                    ) : (
+                        <>
+                            ԳԵՆԵՐԱՑՆԵԼ ԶԵԿՈՒՅՑԸ
+                        </>
+                    )}
+                </button>
+                <AccuracyHint />
+            </div>
+
+            {priorityResult && (
+                <div className="bg-white rounded-2xl shadow-xl border border-orange-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="p-6 bg-orange-600 text-white flex items-center justify-between">
+                        <h2 className="text-xl font-black armenian-text">Հայտնաբերված Խնդիրներ</h2>
+                        <button onClick={handleDownloadAudio} disabled={audioLoading} className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-all text-white" title="Լսել աուդիո տարբերակը">
+                            {audioLoading ? <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></svg> : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" strokeWidth={2} /></svg>}
+                        </button>
+                    </div>
+                    <div className="p-8">
+                        <MarkdownRenderer content={priorityResult} />
+                        <AccuracyHint />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default PriorityTab;
