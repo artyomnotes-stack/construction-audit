@@ -259,9 +259,6 @@ export const performLayoutAudit = async (request: AuditRequest, layoutQuestion: 
 
 export const performVolumeComparison = async (estimateFile: File, asBuiltFile: File): Promise<VolumeComparisonResponse> => {
   const model = 'gemini-flash-latest';
-  const estimateFilePart = { inlineData: { data: await fileToBase64(estimateFile), mimeType: estimateFile.type } };
-  const asBuiltFilePart = { inlineData: { data: await fileToBase64(asBuiltFile), mimeType: asBuiltFile.type } };
-
   const volumeComparisonSchema = {
     type: Type.OBJECT,
     properties: {
