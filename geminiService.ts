@@ -41,11 +41,39 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-const getFileParts = async (files: File[]) => {
+const isExcelFile = (file: File): boolean => {
+  const excelMimeTypes = [
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-excel',
+    'application/msexcel',
+    'application/x-msexcel',
+    'application/x-ms-excel',
+    'application/x-excel',
+    'application/x-dos_ms_excel',
+    'application/xls',
+    'application/x-xls'
+  ];
+  return excelMimeTypes.includes(file.type) ||
+    /\.(xlsx|xls|csv)$/i.test(file.name);
+};
+
+const getFilePartsInternal = async (files: File[]) => {
   const parts = [];
   for (const file of files) {
-    const base64Data = await fileToBase64(file);
-    parts.push({ inlineData: { data: base64Data, mimeType: file.type } });
+    if (isExcelFile(file)) {
+      try {
+        const csvData = await excelToCSV(file);
+        parts.push({ text: `Ֆայլի անվանում: ${file.name}\nԲովանդակություն (CSV ձևաչափով):\n${csvData}` });
+      } catch (err) {
+        console.error(`Error converting ${file.name} to CSV:`, err);
+        // Fallback to base64 if CSV conversion fails, though it might still fail at API level
+        const base64Data = await fileToBase64(file);
+        parts.push({ inlineData: { data: base64Data, mimeType: file.type } });
+      }
+    } else {
+      const base64Data = await fileToBase64(file);
+      parts.push({ inlineData: { data: base64Data, mimeType: file.type } });
+    }
   }
   return parts;
 };
@@ -72,8 +100,8 @@ const excelToCSV = async (file: File): Promise<string> => {
 
 export const performAudit = async (request: AuditRequest, disciplines: PriorityTask[], auditQuestion: string): Promise<AuditResponse> => {
   const model = 'gemini-flash-latest';
-  const projectFileParts = await getFileParts(request.files);
-  const normFileParts = await getFileParts(request.normFiles);
+  const projectFileParts = await getFilePartsInternal(request.files);
+  const normFileParts = await getFilePartsInternal(request.normFiles);
 
   const disciplinesText = disciplines
     .filter(d => d.enabled)
@@ -129,8 +157,8 @@ export const performAudit = async (request: AuditRequest, disciplines: PriorityT
 
 export const performCustomTask = async (request: AuditRequest, userTask: string): Promise<string> => {
   const model = 'gemini-flash-latest';
-  const projectFileParts = await getFileParts(request.files);
-  const normFileParts = await getFileParts(request.normFiles);
+  const projectFileParts = await getFilePartsInternal(request.files);
+  const normFileParts = await getFilePartsInternal(request.normFiles);
 
   const prompt = `
     Դու ArchiCheck AI համակարգի գլխավոր փորձագետ-խորհրդատուն ես: Պատասխանիր հարցին մասնագիտական զեկույցի տեսքով:
@@ -169,8 +197,8 @@ export const performCustomTask = async (request: AuditRequest, userTask: string)
 
 export const performPriorityAudit = async (request: AuditRequest, tasks: PriorityTask[], priorityQuestion: string): Promise<string> => {
   const model = 'gemini-flash-latest';
-  const projectFileParts = await getFileParts(request.files);
-  const normFileParts = await getFileParts(request.normFiles);
+  const projectFileParts = await getFilePartsInternal(request.files);
+  const normFileParts = await getFilePartsInternal(request.normFiles);
 
   const activeTasks = tasks.filter(t => t.enabled);
   if (activeTasks.length === 0) throw new Error("Խնդրում ենք ընտրել առնվազն մեկ ուղղություն:");
@@ -223,8 +251,8 @@ export const performPriorityAudit = async (request: AuditRequest, tasks: Priorit
 
 export const performLayoutAudit = async (request: AuditRequest, layoutQuestion: string): Promise<string> => {
   const model = 'gemini-flash-latest';
-  const projectFileParts = await getFileParts(request.files);
-  const normFileParts = await getFileParts(request.normFiles);
+  const projectFileParts = await getFilePartsInternal(request.files);
+  const normFileParts = await getFilePartsInternal(request.normFiles);
 
   const questionText = layoutQuestion.trim()
     ? `
@@ -305,23 +333,12 @@ export const performVolumeComparison = async (estimateFile: File, asBuiltFile: F
     Պատասխանը պետք է լինի բացառապես JSON ձևաչափով՝ համաձայն տրված սխեմայի։
   `;
 
-  const getFilePart = async (file: File, label: string) => {
-    if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx')) {
-      const csvData = await excelToCSV(file);
-      return { text: `${label} (CSV ձևաչափով):\n${csvData}` };
-    }
-    const base64Data = await fileToBase64(file);
-    return { inlineData: { data: base64Data, mimeType: file.type } };
-  };
-
-  const estimateFilePart = await getFilePart(estimateFile, "Նախահաշիվ");
-  const asBuiltFilePart = await getFilePart(asBuiltFile, "Կատարողական");
+  const projectFileParts = await getFilePartsInternal([estimateFile, asBuiltFile]);
 
   const response = await ai.models.generateContent({
     model,
     contents: [
-      { parts: [estimateFilePart] },
-      { parts: [asBuiltFilePart] },
+      { parts: projectFileParts },
       { parts: [{ text: prompt }] }
     ],
     config: {
