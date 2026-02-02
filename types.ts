@@ -7,12 +7,8 @@ export interface AuditRequest {
   normFiles: File[];
 }
 
-export interface AuditResponse {
-  conclusion: 'SUCCESS' | 'VIOLATION' | 'UNKNOWN';
-  summary: string;
-  details: AuditDetail[];
-  recommendations: string[];
-}
+export type AuditResponse = string;
+
 
 export interface AuditDetail {
   norm: string;
