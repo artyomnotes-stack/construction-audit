@@ -107,18 +107,14 @@ const AuditTab: React.FC<AuditTabProps> = ({
 
             {result && (
                 <div className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className={`p-6 text-white flex items-center justify-between ${result.conclusion === 'VIOLATION' ? 'bg-rose-500' : 'bg-emerald-500'}`}>
+                    <div className="p-6 bg-blue-600 text-white flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-white/20 rounded-xl backdrop-blur-md">
-                                {result.conclusion === 'VIOLATION' ?
-                                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeWidth={2} /></svg>
-                                    :
-                                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth={2} /></svg>
-                                }
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth={2} /></svg>
                             </div>
                             <div>
-                                <h2 className="text-xl font-black armenian-text">{result.conclusion === 'VIOLATION' ? 'ՀԱՅՏՆԱԲԵՐՎԵԼ ԵՆ ԽԱԽՏՈՒՄՆԵՐ' : 'ԽԱԽՏՈՒՄՆԵՐ ՉԵՆ ՀԱՅՏՆԱԲԵՐՎԵԼ'}</h2>
-                                <p className="text-blue-50 text-xs mt-1 opacity-90 armenian-text">Աուդիտի արդյունք</p>
+                                <h2 className="text-xl font-black armenian-text">Աուդիտի Արդյունքներ</h2>
+                                <p className="text-blue-50 text-xs mt-1 opacity-90 armenian-text">Մասնագիտական վերլուծություն</p>
                             </div>
                         </div>
                         <button onClick={handleDownloadAudio} disabled={audioLoading} className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-all text-white" title="Լսել աուդիո տարբերակը">
@@ -127,53 +123,7 @@ const AuditTab: React.FC<AuditTabProps> = ({
                     </div>
 
                     <div className="p-8">
-                        <div className="mb-8 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 armenian-text">Ամփոփում</h3>
-                            <MarkdownRenderer content={result.summary} />
-                        </div>
-
-                        <div className="space-y-4">
-                            {result.details.map((item, idx) => (
-                                <div key={idx} className={`group p-5 rounded-xl border transition-all ${item.status === 'VIOLATION' ? 'bg-red-50/50 border-red-100' : 'bg-emerald-50/50 border-emerald-100'}`}>
-                                    <div className="flex gap-4">
-                                        <div className={`mt-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${item.status === 'VIOLATION' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                                            {idx + 1}
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
-                                                <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wide ${item.status === 'VIOLATION' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                                                    {item.status === 'VIOLATION' ? 'Խախտում' : 'Համապատասխանում է'}
-                                                </span>
-                                                <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono bg-white px-2 py-1 rounded border border-slate-100">
-                                                    <span className="font-bold text-slate-600">{item.norm}</span>
-                                                    <span>|</span>
-                                                    <span>{item.clause}</span>
-                                                </div>
-                                            </div>
-                                            <p className="text-sm text-slate-700 leading-relaxed armenian-text">{item.description}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {result.recommendations.length > 0 && (
-                            <div className="mt-8 p-6 bg-blue-50 rounded-xl border border-blue-100">
-                                <h3 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2 armenian-text">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" strokeWidth={2} /></svg>
-                                    Առաջարկություններ
-                                </h3>
-                                <ul className="space-y-2">
-                                    {result.recommendations.map((rec, i) => (
-                                        <li key={i} className="flex gap-3 text-sm text-blue-800 armenian-text">
-                                            <span className="text-blue-400">•</span>
-                                            {rec}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
+                        <MarkdownRenderer content={result} />
                         <AccuracyHint />
                     </div>
                 </div>
