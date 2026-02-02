@@ -431,7 +431,14 @@ function App() {
       const response = await ai.models.generateContent({
         model: 'gemini-flash-latest',
         contents: [
-          { role: 'user', parts: [{ text: `System Context: User is working on project "${form.projectName}". Category: ${form.category}. Description: ${form.projectDescription}. \n\nUser Question: ${message}` }] }
+          {
+            role: 'user', parts: [{
+              text: `System Context: User is working on project "${form.projectName}". Category: ${form.category}. Description: ${form.projectDescription}. 
+          Strictly follow the unified Markdown point-by-point format with icons (🚩, 📚, 💡) for your responses. Avoid LaTeX ($) for simple units and numbers. Use school-book style.
+          
+          User Question: ${message}`
+            }]
+          }
         ]
       });
 
@@ -564,7 +571,7 @@ function App() {
               timeLeft={auditTimeLeft}
               result={auditResult}
               AccuracyHint={AccuracyHint}
-              handleDownloadAudio={() => handleDownloadAudio(auditResult?.summary || '')}
+              handleDownloadAudio={() => handleDownloadAudio(auditResult || '')}
               audioLoading={audioLoading}
             />
           )}
