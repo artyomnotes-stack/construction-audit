@@ -4,7 +4,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, updateDoc, Timestamp, setDoc } from 'firebase/firestore';
 import { auth, db } from './services/firebase';
 import { GoogleGenAI } from "@google/genai";
-import { performAudit, performCustomTask, performPriorityAudit, performLayoutAudit, generateAudioResponse } from './services/geminiService';
+import { performAudit, performCustomTask, performPriorityAudit, performLayoutAudit } from './services/geminiService';
 import { AuditRequest, AuditResponse, PriorityTask, Template, VolumeComparisonResponse, ChatMessage } from './types';
 import { INITIAL_AUDIT_TASKS, INITIAL_PRIORITY_TASKS, PROJECT_CATEGORIES } from './constants';
 
@@ -82,7 +82,6 @@ function App() {
   const [chatLoading, setChatLoading] = useState(false);
 
   // Common State
-  const [audioLoading, setAudioLoading] = useState(false);
   const [templates, setTemplates] = useState<Template[]>(() => {
     const saved = localStorage.getItem('archi_templates');
     return saved ? JSON.parse(saved) : [];
@@ -194,23 +193,46 @@ function App() {
     setForm(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== index) }));
   };
 
-  const handleDownloadAudio = async (text: string) => {
-    if (!text) return;
-    setAudioLoading(true);
+  const handleExportPDF = async (content: string, filename: string) => {
     try {
-      const audioBlob = await generateAudioResponse(text);
-      const url = URL.createObjectURL(audioBlob);
+      const { default: jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+
+      // Basic text wrapping for PDF
+      const splitText = doc.splitTextToSize(content, 180);
+      doc.text(splitText, 10, 10);
+      doc.save(`${filename}.pdf`);
+    } catch (error) {
+      console.error('PDF Export Error:', error);
+      alert('Սխալ՝ չհաջողվեց ներբեռնել PDF');
+    }
+  };
+
+  const handleExportWord = (content: string, filename: string) => {
+    try {
+      // Enhanced Word export (HTML to DOCX via blob)
+      const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+        "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+        "xmlns='http://www.w3.org/TR/REC-html40'>" +
+        "<head><meta charset='utf-8'><title>Export</title></head><body>";
+      const footer = "</body></html>";
+      const html = header + content.replace(/\n/g, '<br>') + footer;
+
+      const blob = new Blob(['\ufeff', html], {
+        type: 'application/msword'
+      });
+
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'report_audio.wav';
+      a.download = `${filename}.doc`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (error: any) {
-      alert(error.message);
-    } finally {
-      setAudioLoading(false);
+    } catch (error) {
+      console.error('Word Export Error:', error);
+      alert('Սխալ՝ չհաջողվեց ներբեռնել Word');
     }
   };
 
@@ -577,8 +599,8 @@ function App() {
               timeLeft={auditTimeLeft}
               result={auditResult}
               AccuracyHint={AccuracyHint}
-              handleDownloadAudio={() => handleDownloadAudio(auditResult || '')}
-              audioLoading={audioLoading}
+              onExportPDF={(text) => handleExportPDF(text, 'Audit_Report')}
+              onExportWord={(text) => handleExportWord(text, 'Audit_Report')}
             />
           )}
 
@@ -593,8 +615,8 @@ function App() {
               consultantResult={consultantResult}
               AccuracyHint={AccuracyHint}
               templates={templates}
-              handleDownloadAudio={() => handleDownloadAudio(consultantResult || '')}
-              audioLoading={audioLoading}
+              onExportPDF={(text) => handleExportPDF(text, 'Consultant_Advice')}
+              onExportWord={(text) => handleExportWord(text, 'Consultant_Advice')}
             />
           )}
 
@@ -611,8 +633,8 @@ function App() {
               priorityResult={priorityResult}
               AccuracyHint={AccuracyHint}
               templates={templates}
-              handleDownloadAudio={() => handleDownloadAudio(priorityResult || '')}
-              audioLoading={audioLoading}
+              onExportPDF={(text) => handleExportPDF(text, 'Priority_Audit')}
+              onExportWord={(text) => handleExportWord(text, 'Priority_Audit')}
             />
           )}
 
@@ -627,8 +649,8 @@ function App() {
               layoutResult={layoutResult}
               AccuracyHint={AccuracyHint}
               templates={templates}
-              handleDownloadAudio={() => handleDownloadAudio(layoutResult || '')}
-              audioLoading={audioLoading}
+              onExportPDF={(text) => handleExportPDF(text, 'Layout_Audit')}
+              onExportWord={(text) => handleExportWord(text, 'Layout_Audit')}
             />
           )}
 

@@ -43,6 +43,8 @@ export interface VolumeComparisonRow {
   unit: string;
   plannedQty: number;
   actualQty: number;
+  unitPrice?: number;
+  totalPrice?: number;
 }
 
 export interface VolumeSummary {
