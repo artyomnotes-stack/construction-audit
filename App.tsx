@@ -434,7 +434,11 @@ function App() {
           {
             role: 'user', parts: [{
               text: `System Context: User is working on project "${form.projectName}". Category: ${form.category}. Description: ${form.projectDescription}. 
-          Strictly follow the unified Markdown point-by-point format with icons (🚩, 📚, 💡) for your responses. Avoid LaTeX ($) for simple units and numbers. Use school-book style. Use Markdown tables only for technical parameters.
+          Դու հանդես ես գալիս որպես **Hardcore Textbook Publisher (No-LaTeX Mode)**:
+          - **ԱՐԳԵԼՎՈՒՄ Է** LaTeX-ի ($) կամ backslash-ի (\\) օգտագործումը:
+          - Չափման միավորները գրիր միայն հայերեն տեքստով (մ³, կՎտ):
+          - Թվերը կլորացրու մինչև 2 տասնորդական նիշ:
+          - Օգտագործիր բացառապես Markdown:
           
           User Question: ${message}`
             }]
