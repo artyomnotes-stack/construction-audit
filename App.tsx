@@ -193,15 +193,40 @@ function App() {
     setForm(prev => ({ ...prev, files: prev.files.filter((_, i) => i !== index) }));
   };
 
-  const handleExportPDF = async (content: string, filename: string) => {
+  const handleExportPDF = async (element: HTMLElement | null, filename: string) => {
+    if (!element) return;
     try {
       const { default: jsPDF } = await import('jspdf');
-      const doc = new jsPDF();
+      const { default: html2canvas } = await import('html2canvas');
 
-      // Basic text wrapping for PDF
-      const splitText = doc.splitTextToSize(content, 180);
-      doc.text(splitText, 10, 10);
-      doc.save(`${filename}.pdf`);
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff"
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      const imgWidth = 190;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 10;
+
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`${filename}_${new Date().toLocaleDateString()}.pdf`);
     } catch (error) {
       console.error('PDF Export Error:', error);
       alert('Սխալ՝ չհաջողվեց ներբեռնել PDF');
@@ -457,7 +482,7 @@ function App() {
             role: 'user', parts: [{
               text: `System Context: User is working on project "${form.projectName}". Category: ${form.category}. Description: ${form.projectDescription}. 
           Դու հանդես ես գալիս որպես **Hardcore Textbook Publisher (No-LaTeX Mode)**:
-          - **ԱՐԳԵԼՎՈՒՄ Է** LaTeX-ի ($) կամ backslash-ի (\\) օգտագործումը:
+          - **ԱՐԳԵԼՎՈՒՄ Է** LaTeX-ի ($) կամ backslash-ի (\\) կիրառումը:
           - Չափման միավորները գրիր միայն հայերեն տեքստով (մ³, կՎտ):
           - **ԱՐԳԵԼՎՈՒՄ Է** դատարկ տողեր թողնել տեխնիկական պիտակի և տեքստի միջև:
           - Պիտակներից առաջ **ՄԻ ՕԳՏԱԳՈՐԾԻՐ** պուտիկներ (bullets):
@@ -599,7 +624,7 @@ function App() {
               timeLeft={auditTimeLeft}
               result={auditResult}
               AccuracyHint={AccuracyHint}
-              onExportPDF={(text) => handleExportPDF(text, 'Audit_Report')}
+              onExportPDF={(el) => handleExportPDF(el, 'Audit_Report')}
               onExportWord={(text) => handleExportWord(text, 'Audit_Report')}
             />
           )}
@@ -615,7 +640,7 @@ function App() {
               consultantResult={consultantResult}
               AccuracyHint={AccuracyHint}
               templates={templates}
-              onExportPDF={(text) => handleExportPDF(text, 'Consultant_Advice')}
+              onExportPDF={(el) => handleExportPDF(el, 'Consultant_Advice')}
               onExportWord={(text) => handleExportWord(text, 'Consultant_Advice')}
             />
           )}
@@ -633,7 +658,7 @@ function App() {
               priorityResult={priorityResult}
               AccuracyHint={AccuracyHint}
               templates={templates}
-              onExportPDF={(text) => handleExportPDF(text, 'Priority_Audit')}
+              onExportPDF={(el) => handleExportPDF(el, 'Priority_Audit')}
               onExportWord={(text) => handleExportWord(text, 'Priority_Audit')}
             />
           )}
@@ -649,7 +674,7 @@ function App() {
               layoutResult={layoutResult}
               AccuracyHint={AccuracyHint}
               templates={templates}
-              onExportPDF={(text) => handleExportPDF(text, 'Layout_Audit')}
+              onExportPDF={(el) => handleExportPDF(el, 'Layout_Audit')}
               onExportWord={(text) => handleExportWord(text, 'Layout_Audit')}
             />
           )}
