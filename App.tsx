@@ -199,31 +199,74 @@ function App() {
       const { default: jsPDF } = await import('jspdf');
       const { default: html2canvas } = await import('html2canvas');
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff"
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 10;
+      const maxW = pageWidth - margin * 2;
+      const maxH = pageHeight - margin * 2;
+
+      const elementRect = element.getBoundingClientRect();
+      // Select blocks to avoid slicing inside them
+      const blocks = Array.from(element.querySelectorAll('.markdown-body > *, .accuracy-hint-container, :scope > *:not(.markdown-body)'));
+
+      const pxWidth = element.offsetWidth;
+      const pxPageHeight = (pxWidth / maxW) * maxH;
+
+      const cuts = [0];
+      let lastCut = 0;
+
+      blocks.forEach((block) => {
+        const blockRect = (block as HTMLElement).getBoundingClientRect();
+        const relativeBottom = blockRect.bottom - elementRect.top;
+        const relativeTop = blockRect.top - elementRect.top;
+
+        // If this block pushes us over the page limit
+        if (relativeBottom - lastCut > pxPageHeight) {
+          // If we have some space before this block, cut there
+          if (relativeTop > lastCut + 50) { // +50px buffer to avoid tiny slivers
+            cuts.push(relativeTop);
+            lastCut = relativeTop;
+          } else {
+            // Block itself is very long, we have to slice it or it's just the start
+            // Let's at least avoid slicing exactly at the top if possible
+            const slicePoint = lastCut + pxPageHeight;
+            cuts.push(slicePoint);
+            lastCut = slicePoint;
+          }
+        }
       });
 
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      // Add final boundary if needed
+      if (element.scrollHeight - lastCut > 10) {
+        cuts.push(element.scrollHeight);
+      }
 
-      const imgWidth = 190;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      for (let i = 0; i < cuts.length - 1; i++) {
+        const y = cuts[i];
+        const height = cuts[i + 1] - y;
+        if (height <= 5) continue; // Skip tiny fragments
 
-      let heightLeft = imgHeight;
-      let position = 10;
+        const canvas = await html2canvas(element, {
+          y: y,
+          height: height,
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff",
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight
+        });
 
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+        const imgData = canvas.toDataURL('image/png');
+        if (i > 0) pdf.addPage();
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        const imgW = maxW;
+        const imgH = (canvas.height * imgW) / canvas.width;
+
+        // Center vertically if it's the only thing on page and much smaller? 
+        // No, stay at top margin.
+        pdf.addImage(imgData, 'PNG', margin, margin, imgW, Math.min(imgH, maxH));
       }
 
       pdf.save(`${filename}_${new Date().toLocaleDateString()}.pdf`);
