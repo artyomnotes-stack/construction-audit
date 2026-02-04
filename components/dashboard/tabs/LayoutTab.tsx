@@ -14,7 +14,7 @@ interface LayoutTabProps {
     layoutResult: string | null;
     AccuracyHint: React.FC;
     templates: Template[];
-    onExportPDF: (text: string) => void;
+    onExportPDF: (element: HTMLElement | null) => void;
     onExportWord: (text: string) => void;
 }
 
@@ -31,6 +31,7 @@ const LayoutTab: React.FC<LayoutTabProps> = ({
     onExportPDF,
     onExportWord
 }) => {
+    const reportRef = React.useRef<HTMLDivElement>(null);
     return (
         <div className="space-y-6">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
@@ -71,7 +72,7 @@ const LayoutTab: React.FC<LayoutTabProps> = ({
                         <h3 className="font-bold armenian-text text-slate-800">Վերլուծության Արդյունք</h3>
                         <div className="flex gap-2">
                             <button
-                                onClick={() => onExportPDF(layoutResult)}
+                                onClick={() => onExportPDF(reportRef.current)}
                                 className="px-3 py-1.5 bg-rose-50 text-rose-700 rounded-lg text-xs font-bold hover:bg-rose-100 transition-colors flex items-center gap-1.5"
                             >
                                 PDF
@@ -84,7 +85,7 @@ const LayoutTab: React.FC<LayoutTabProps> = ({
                             </button>
                         </div>
                     </div>
-                    <div className="p-8">
+                    <div className="p-8" ref={reportRef}>
                         <MarkdownRenderer content={layoutResult} />
                         <AccuracyHint />
                     </div>

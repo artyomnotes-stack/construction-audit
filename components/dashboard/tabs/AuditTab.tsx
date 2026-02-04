@@ -14,7 +14,7 @@ interface AuditTabProps {
     timeLeft: number;
     result: string | null;
     AccuracyHint: React.FC;
-    onExportPDF: (text: string) => void;
+    onExportPDF: (element: HTMLElement | null) => void;
     onExportWord: (text: string) => void;
 }
 
@@ -32,6 +32,7 @@ const AuditTab: React.FC<AuditTabProps> = ({
     onExportPDF,
     onExportWord
 }) => {
+    const reportRef = React.useRef<HTMLDivElement>(null);
     return (
         <div className="space-y-6">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
@@ -122,7 +123,7 @@ const AuditTab: React.FC<AuditTabProps> = ({
                         <h3 className="font-bold armenian-text text-slate-800">Աուդիտի Արդյունք</h3>
                         <div className="flex gap-2">
                             <button
-                                onClick={() => onExportPDF(result)}
+                                onClick={() => onExportPDF(reportRef.current)}
                                 className="px-3 py-1.5 bg-rose-50 text-rose-700 rounded-lg text-xs font-bold hover:bg-rose-100 transition-colors flex items-center gap-1.5"
                                 title="Ներբեռնել PDF"
                             >
@@ -140,7 +141,7 @@ const AuditTab: React.FC<AuditTabProps> = ({
                         </div>
                     </div>
 
-                    <div className="p-8">
+                    <div className="p-8" ref={reportRef}>
                         <MarkdownRenderer content={result} />
                         <AccuracyHint />
                     </div>
