@@ -12,10 +12,10 @@ interface AuditTabProps {
     loading: boolean;
     progress: number;
     timeLeft: number;
-    result: AuditResponse | null;
+    result: string | null;
     AccuracyHint: React.FC;
-    handleDownloadAudio: () => void;
-    audioLoading: boolean;
+    onExportPDF: (text: string) => void;
+    onExportWord: (text: string) => void;
 }
 
 const AuditTab: React.FC<AuditTabProps> = ({
@@ -29,8 +29,8 @@ const AuditTab: React.FC<AuditTabProps> = ({
     timeLeft,
     result,
     AccuracyHint,
-    handleDownloadAudio,
-    audioLoading
+    onExportPDF,
+    onExportWord
 }) => {
     return (
         <div className="space-y-6">
@@ -44,7 +44,7 @@ const AuditTab: React.FC<AuditTabProps> = ({
                         <ol className="list-decimal list-inside text-xs text-slate-600 armenian-text space-y-1 ml-1">
                             <li>Ընտրեք ուղղությունները, որոնք ցանկանում եք ստուգել (օր.՝ Ճարտարապետություն):</li>
                             <li>Նշեք քանակը, թե քանի հիմնական ստուգում պետք է կատարի AI-ն յուրաքանչյուր ուղղությամբ:</li>
-                            <li>(Ըստ ցանկության) Տվեք կոնկրետ հարց, եթե ցանկանում եք, որ աուդիտը կենտրոնանա որոշակի խնդրի շուրջ:</li>
+                            <li>(Ըստ ցանկության) Տվեք կոնկրետ հարց, եթի ցանկանում եք, որ աուդիտը կենտրոնանա որոշակի խնդրի շուրջ:</li>
                             <li>Սեղմեք «Սկսել Հիմնական Աուդիտը»:</li>
                         </ol>
                     </div>
@@ -117,9 +117,27 @@ const AuditTab: React.FC<AuditTabProps> = ({
                                 <p className="text-blue-50 text-xs mt-1 opacity-90 armenian-text">Մասնագիտական վերլուծություն</p>
                             </div>
                         </div>
-                        <button onClick={handleDownloadAudio} disabled={audioLoading} className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-all text-white" title="Լսել աուդիո տարբերակը">
-                            {audioLoading ? <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></svg> : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" strokeWidth={2} /></svg>}
-                        </button>
+                    </div>
+                    <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                        <h3 className="font-bold armenian-text text-slate-800">Աուդիտի Արդյունք</h3>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => onExportPDF(result)}
+                                className="px-3 py-1.5 bg-rose-50 text-rose-700 rounded-lg text-xs font-bold hover:bg-rose-100 transition-colors flex items-center gap-1.5"
+                                title="Ներբեռնել PDF"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a2 2 0 00-.586-1.414l-7-7A2 2 0 0010.586 1H7a2 2 0 00-2 2v16a2 2 0 002 2z" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                PDF
+                            </button>
+                            <button
+                                onClick={() => onExportWord(result)}
+                                className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors flex items-center gap-1.5"
+                                title="Ներբեռնել Word"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a2 2 0 00-.586-1.414l-7-7A2 2 0 0010.586 1H7a2 2 0 00-2 2v16a2 2 0 002 2z" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                Word
+                            </button>
+                        </div>
                     </div>
 
                     <div className="p-8">

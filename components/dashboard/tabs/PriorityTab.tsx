@@ -16,8 +16,8 @@ interface PriorityTabProps {
     priorityResult: string | null;
     AccuracyHint: React.FC;
     templates: Template[];
-    handleDownloadAudio: () => void;
-    audioLoading: boolean;
+    onExportPDF: (text: string) => void;
+    onExportWord: (text: string) => void;
 }
 
 const PriorityTab: React.FC<PriorityTabProps> = ({
@@ -32,8 +32,8 @@ const PriorityTab: React.FC<PriorityTabProps> = ({
     priorityResult,
     AccuracyHint,
     templates,
-    handleDownloadAudio,
-    audioLoading
+    onExportPDF,
+    onExportWord
 }) => {
     return (
         <div className="space-y-6">
@@ -92,11 +92,22 @@ const PriorityTab: React.FC<PriorityTabProps> = ({
 
             {priorityResult && (
                 <div className="bg-white rounded-2xl shadow-xl border border-orange-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="p-6 bg-orange-600 text-white flex items-center justify-between">
-                        <h2 className="text-xl font-black armenian-text">Հայտնաբերված Խնդիրներ</h2>
-                        <button onClick={handleDownloadAudio} disabled={audioLoading} className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-all text-white" title="Լսել աուդիո տարբերակը">
-                            {audioLoading ? <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></svg> : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" strokeWidth={2} /></svg>}
-                        </button>
+                    <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                        <h3 className="font-bold armenian-text text-slate-800">Վերլուծության Արդյունք</h3>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => onExportPDF(priorityResult)}
+                                className="px-3 py-1.5 bg-rose-50 text-rose-700 rounded-lg text-xs font-bold hover:bg-rose-100 transition-colors flex items-center gap-1.5"
+                            >
+                                PDF
+                            </button>
+                            <button
+                                onClick={() => onExportWord(priorityResult)}
+                                className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors flex items-center gap-1.5"
+                            >
+                                Word
+                            </button>
+                        </div>
                     </div>
                     <div className="p-8">
                         <MarkdownRenderer content={priorityResult} />
